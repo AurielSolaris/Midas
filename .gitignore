@@ -1,0 +1,62 @@
+# Gradle and Kotlin caches and build outputs
+.gradle/
+.gradle-local/
+.kotlin/
+**/build/
+out/
+dist/
+
+# Android SDK and generated packages
+local.properties
+.cxx/
+.externalNativeBuild/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.hprof
+*.prof
+*.profm
+
+# Desktop installers and JVM build products
+*.msi
+*.exe
+*.dmg
+*.deb
+*.AppImage
+*.class
+
+# Signing credentials and local environment files
+keystore/
+*.jks
+*.keystore
+*.p12
+*.pfx
+key.properties
+.env
+.env.*
+!.env.example
+
+# IDE and editor state
+.idea/
+*.iml
+.vscode/
+.vs/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# Python tools
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Logs and operating system metadata
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini
