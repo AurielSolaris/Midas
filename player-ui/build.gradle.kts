@@ -9,7 +9,7 @@ kotlin {
     jvm("desktop")
     androidLibrary {
         namespace = "app.auriel.midas.ui"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 26
         androidResources { enable = true }
     }
