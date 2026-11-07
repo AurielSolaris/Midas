@@ -321,6 +321,7 @@ private fun LibraryScreen(deps: AppDependencies) {
     val prefs by deps.settings.settings.collectAsState()
     var showUrl by remember { mutableStateOf(false) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
+    var showClearRecents by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
         state.message?.let { snackbar.showSnackbar(it); state.message = null }
@@ -397,7 +398,12 @@ private fun LibraryScreen(deps: AppDependencies) {
                             }
                         }
                     }
-                    if (prefs.recent.isNotEmpty()) item { SectionTitle("Recent") }
+                    if (prefs.recent.isNotEmpty()) item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.weight(1f)) { SectionTitle("Recent") }
+                            TextButton(onClick = { showClearRecents = true }, modifier = Modifier.padding(end = Spacing.m)) { Text("Clear recents") }
+                        }
+                    }
                     items(prefs.recent, key = { "r-" + it.location }) { r ->
                         RecentRow(
                             r,
@@ -413,6 +419,13 @@ private fun LibraryScreen(deps: AppDependencies) {
         }
         ThemeDecorations()
     }
+
+    if (showClearRecents) AlertDialog(
+        onDismissRequest = { showClearRecents = false }, title = { Text("Clear recents?") },
+        text = { Text("Your saved playback positions will be kept.") },
+        confirmButton = { TextButton(onClick = { deps.settings.update { it.copy(recent = emptyList()) }; showClearRecents = false }) { Text("Clear") } },
+        dismissButton = { TextButton(onClick = { showClearRecents = false }) { Text("Cancel") } },
+    )
 
     if (showUrl) {
         OpenUrlDialog(onOpen = { url, headers -> showUrl = false; state.openUrl(url, headers) }, onDismiss = { showUrl = false })

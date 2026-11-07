@@ -72,6 +72,7 @@ internal fun LibraryScreen(settings: SettingsRepository, error: String?, open: (
     var playlistId by remember { mutableStateOf<String?>(null) }
     var playlistVideos by remember { mutableStateOf<List<LibraryVideo>>(emptyList()) }
     var showCreate by remember { mutableStateOf(false) }
+    var showClearRecents by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
     var showLink by remember { mutableStateOf(false) }
     var link by remember { mutableStateOf("") }
@@ -185,11 +186,22 @@ internal fun LibraryScreen(settings: SettingsRepository, error: String?, open: (
                         TextButton(onClick = { settings.update { s -> s.copy(playlists = s.playlists.filterNot { it.id == playlist.id }) } }, modifier = Modifier.semantics { contentDescription = "Delete playlist ${playlist.name}" }) { Text("Delete") }
                     }
                 }
-                item { Text("Recent", style = MaterialTheme.typography.titleMedium) }
-                items(prefs.recent, key = { it.location }) { recent -> TextButton(onClick = { open(Uri.parse(recent.location), null) }) { Text(recent.title) } }
+                item { Row { Text("Recent", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium); if (prefs.recent.isNotEmpty()) TextButton(onClick = { showClearRecents = true }) { Text("Clear recents") } } }
+                items(prefs.recent, key = { it.location }) { recent ->
+                    Row {
+                        TextButton(onClick = { open(Uri.parse(recent.location), null) }, modifier = Modifier.weight(1f)) { Text(recent.title) }
+                        TextButton(onClick = { settings.update { s -> s.copy(recent = s.recent.filterNot { it.location == recent.location }) } }, modifier = Modifier.semantics { contentDescription = "Remove ${recent.title} from recents" }) { Text("Remove") }
+                    }
+                }
             }
         }
     }
+    if (showClearRecents) AlertDialog(
+        onDismissRequest = { showClearRecents = false }, title = { Text("Clear recents?") },
+        text = { Text("Your saved playback positions will be kept.") },
+        confirmButton = { TextButton(onClick = { settings.update { it.copy(recent = emptyList()) }; showClearRecents = false }) { Text("Clear") } },
+        dismissButton = { TextButton(onClick = { showClearRecents = false }) { Text("Cancel") } },
+    )
     if (showCreate) AlertDialog(onDismissRequest = { showCreate = false }, title = { Text("New playlist") }, text = { OutlinedTextField(newName, { newName = it }, label = { Text("Name") }, singleLine = true) },
         confirmButton = { TextButton(enabled = newName.isNotBlank(), onClick = { val p = SavedPlaylist(UUID.randomUUID().toString(), newName.trim()); settings.update { it.copy(playlists = it.playlists + p) }; playlistId = p.id; newName = ""; showCreate = false }) { Text("Create") } }, dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Cancel") } })
     if (showLink) AlertDialog(onDismissRequest = { showLink = false }, title = { Text("Open link") }, text = { Column { OutlinedTextField(link, { link = it }, label = { Text("Video URL") }); OutlinedTextField(headers, { headers = it }, label = { Text("HTTP headers (optional)") }) } },

@@ -31,7 +31,7 @@ compose.desktop {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Deb, TargetFormat.AppImage)
             packageName = "Midas"
             // MSI versions must be numeric; the app and release version is alpha-0.2.
-            packageVersion = "1.0.5"
+            packageVersion = "1.0.6"
             description = "Midas video player"
             vendor = "Auriel"
             modules("java.instrument", "java.management", "java.net.http", "jdk.unsupported", "jdk.httpserver", "java.naming", "java.desktop")
