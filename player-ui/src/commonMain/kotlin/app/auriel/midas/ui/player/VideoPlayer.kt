@@ -394,6 +394,7 @@ private fun PlayerContent(
         engine.selectAudio(next.id)
         flash("Audio: ${next.label}")
     }
+    val saveScreenshot = rememberScreenshotSaver()
     fun screenshot() {
         val frame = engine.screenshot() ?: run { flash("No frame to save yet"); return }
         scope.launch {
@@ -675,6 +676,11 @@ private fun PlayerContent(
                         if (hasNext) PlayerIconButton(PlayerIcons.SkipNext, "Next (N)", onClick = onNext)
                         PlayerIconButton(PlayerIcons.Replay, "Back 10 seconds (J)") { skip(-10.0) }
                         PlayerIconButton(PlayerIcons.Replay, "Forward 10 seconds (L)", Modifier.scale(scaleX = -1f, scaleY = 1f)) { skip(10.0) }
+                        TextButton(onClick = { engine.frameStep(false); showControls() }) { Text("◀ Frame") }
+                        TextButton(onClick = { engine.frameStep(true); showControls() }) { Text("Frame ▶") }
+                        TextButton(onClick = { abLoop(); showControls() }) {
+                            Text(if (loopA == null) "Set A" else if (loopB == null) "Set B" else "Clear A–B")
+                        }
                         PlayerIconButton(if (volume == 0f) PlayerIcons.VolumeOff else PlayerIcons.VolumeUp, "Mute (M)", onClick = ::toggleMute)
                         Slider(
                             value = volume,

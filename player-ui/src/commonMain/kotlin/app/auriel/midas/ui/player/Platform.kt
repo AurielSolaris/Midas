@@ -37,4 +37,5 @@ expect fun KeepScreenOn(enabled: Boolean)
 expect fun rememberSubtitleFilePicker(onPicked: (name: String, bytes: ByteArray) -> Unit): () -> Unit
 
 /** Saves [frame] as a PNG in the user's Pictures/Midas folder; returns the saved file's path. */
-expect fun saveScreenshot(frame: VideoFrame, baseName: String): String
+@Composable
+expect fun rememberScreenshotSaver(): (VideoFrame, String) -> String

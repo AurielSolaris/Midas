@@ -75,7 +75,8 @@ class AndroidPlaybackEngine(context: Context) : PlaybackEngine {
     override fun pause() = player.pause()
     override fun seek(seconds: Double, exact: Boolean) = player.seekTo((seconds.coerceAtLeast(0.0) * 1000).toLong())
     override fun frameStep(forward: Boolean) { pause(); seek(clock.now() + if (forward) 1.0 / 30 else -1.0 / 30, true) }
-    override fun screenshot(): VideoFrame? = null
+    var captureFrame: (() -> VideoFrame?)? = null
+    override fun screenshot(): VideoFrame? = captureFrame?.invoke()
     override fun selectAudio(id: String?) = select(id, C.TRACK_TYPE_AUDIO)
     override fun selectSubtitle(id: String?) = select(id, C.TRACK_TYPE_TEXT)
     override fun close() { player.stop(); player.clearMediaItems(); stateFlow.value = PlaybackState.Idle }

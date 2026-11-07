@@ -283,7 +283,10 @@ actual fun rememberSubtitleFilePicker(onPicked: (name: String, bytes: ByteArray)
 
 private val UNSAFE_FILE_CHARS = Regex("""[\\/:*?"<>|]""")
 
-actual fun saveScreenshot(frame: VideoFrame, baseName: String): String {
+@Composable
+actual fun rememberScreenshotSaver(): (VideoFrame, String) -> String = { frame, baseName -> saveScreenshot(frame, baseName) }
+
+private fun saveScreenshot(frame: VideoFrame, baseName: String): String {
     val home = File(System.getProperty("user.home"))
     val pictures = listOf(File(home, "Pictures"), File(home, "OneDrive/Pictures")).firstOrNull { it.isDirectory } ?: home
     val dir = File(pictures, "Midas").apply { mkdirs() }
