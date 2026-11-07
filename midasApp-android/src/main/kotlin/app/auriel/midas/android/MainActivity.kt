@@ -7,6 +7,7 @@ import android.provider.OpenableColumns
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -44,14 +45,22 @@ class MainActivity : ComponentActivity() {
     private val fetcher by lazy { SubtitleFetcher(http) { settings.current } }
     private var current by mutableStateOf<PlayerItem?>(null)
     private var lastError by mutableStateOf<String?>(null)
+    private var queue by mutableStateOf<List<LibraryVideo>>(emptyList())
+    private var queueIndex by mutableIntStateOf(-1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
-            savedInstanceState.getString("source")?.let { openUri(Uri.parse(it), savedInstanceState.getString("headers")) }
+            val uris = savedInstanceState.getStringArrayList("queue_uris")
+            val names = savedInstanceState.getStringArrayList("queue_names")
+            val index = savedInstanceState.getInt("queue_index", -1)
+            if (uris != null && names != null && uris.size == names.size && index in uris.indices) {
+                openQueue(uris.zip(names).map { (uri, name) -> LibraryVideo(Uri.parse(uri), name) }, index)
+            } else savedInstanceState.getString("source")?.let { openUri(Uri.parse(it), savedInstanceState.getString("headers")) }
         } else handleIntent(intent)
         setContent {
-            MidasTheme(AppTheme.Dark) {
+            val preferences by settings.settings.collectAsState()
+            MidasTheme(AppTheme.fromName(preferences.theme)) {
                 val fullscreen = remember {
                     FullscreenController { enabled ->
                         @Suppress("DEPRECATION")
@@ -60,12 +69,19 @@ class MainActivity : ComponentActivity() {
                 }
                 CompositionLocalProvider(LocalFullscreen provides fullscreen) {
                     val item = current
-                    if (item == null) HomeScreen(lastError, ::openUri)
-                    else VideoPlayer(engine, item, settings, fetcher, false, false, null, {}, {}, onClose = {
+                    if (item == null) Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface) {
+                        LibraryScreen(settings, lastError, ::openUri, ::openQueue)
+                    }
+                    else {
+                        BackHandler { persistPosition(); engine.pause(); current = null; fullscreen.set(false) }
+                        VideoPlayer(engine, item, settings, fetcher, queueIndex > 0, queueIndex >= 0 && queueIndex < queue.lastIndex,
+                        queue.getOrNull(queueIndex + 1)?.name, { playQueueItem(queueIndex - 1) }, { playQueueItem(queueIndex + 1) }, onClose = {
+                        persistPosition()
                         engine.pause()
                         current = null
                         fullscreen.set(false)
                     }, resumeMinDuration = 0.0, resumeMinPosition = 5.0)
+                    }
                 }
             }
         }
@@ -77,6 +93,11 @@ class MainActivity : ComponentActivity() {
         current?.let { item ->
             outState.putString("source", item.key)
             (item.source as? MediaSource.Http)?.headers?.let { headers -> outState.putString("headers", headers.entries.joinToString("\n") { "${it.key}: ${it.value}" }) }
+        }
+        if (queueIndex in queue.indices) {
+            outState.putStringArrayList("queue_uris", ArrayList(queue.map { it.uri.toString() }))
+            outState.putStringArrayList("queue_names", ArrayList(queue.map { it.name }))
+            outState.putInt("queue_index", queueIndex)
         }
         super.onSaveInstanceState(outState)
     }
@@ -93,6 +114,20 @@ class MainActivity : ComponentActivity() {
         if (intent?.action == Intent.ACTION_VIEW) intent.data?.let { openUri(it, null) }
     }
     private fun openUri(uri: Uri, headers: String?) {
+        queue = emptyList()
+        queueIndex = -1
+        playUri(uri, headers)
+    }
+    private fun openQueue(videos: List<LibraryVideo>, index: Int) {
+        queue = videos
+        playQueueItem(index)
+    }
+    private fun playQueueItem(index: Int) {
+        val video = queue.getOrNull(index) ?: return
+        queueIndex = index
+        playUri(video.uri, null, video.name)
+    }
+    private fun playUri(uri: Uri, headers: String?, displayName: String? = null) {
         if (uri.scheme !in setOf("content", "file", "http", "https")) { lastError = "Unsupported link or file."; return }
         if (uri.scheme == "content") runCatching {
             contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -100,7 +135,7 @@ class MainActivity : ComponentActivity() {
         val title = if (uri.scheme == "content") runCatching {
             contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null }
         }.getOrNull() else uri.lastPathSegment
-        val name = title ?: "Video"
+        val name = displayName ?: title ?: "Video"
         val key = uri.toString()
         val source = when (uri.scheme) {
             "http", "https" -> MediaSource.Http(key, headers.orEmpty().lines().filter { ':' in it }.associate { it.substringBefore(':').trim() to it.substringAfter(':').trim() })
@@ -108,28 +143,7 @@ class MainActivity : ComponentActivity() {
         }
         if (current != null) persistPosition()
         current = PlayerItem(key, source, name.substringBeforeLast('.'), null, MediaGuesser.guess(name, url = key))
+        settings.addRecent(app.auriel.midas.data.RecentItem(key, name, System.currentTimeMillis()))
         lastError = null
     }
-}
-
-@Composable
-private fun HomeScreen(error: String?, open: (Uri, String?) -> Unit) {
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) open(uri, null) }
-    var showLink by remember { mutableStateOf(false) }
-    var link by remember { mutableStateOf("") }
-    var headers by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Midas", style = MaterialTheme.typography.headlineLarge)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = { picker.launch(arrayOf("video/*", "audio/*", "application/x-matroska")) }) { Text("Open video") }
-        TextButton(onClick = { showLink = true }) { Text("Open link") }
-        if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
-    }
-    if (showLink) AlertDialog(
-        onDismissRequest = { showLink = false },
-        title = { Text("Open link") },
-        text = { Column { OutlinedTextField(link, { link = it }, label = { Text("Video URL") }); OutlinedTextField(headers, { headers = it }, label = { Text("HTTP headers (optional)") }) } },
-        confirmButton = { TextButton(enabled = link.startsWith("http://") || link.startsWith("https://"), onClick = { open(Uri.parse(link.trim()), headers); showLink = false }) { Text("Play") } },
-        dismissButton = { TextButton(onClick = { showLink = false }) { Text("Cancel") } },
-    )
 }

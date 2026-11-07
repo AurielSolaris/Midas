@@ -21,8 +21,10 @@ kotlin {
             api(compose.foundation)
             api(compose.material3)
             api(compose.ui)
+            implementation(compose.components.resources)
             api(libs.material.icons.core)
         }
+        commonTest.dependencies { implementation(kotlin("test")) }
         getByName("desktopMain").dependencies {
             implementation(compose.desktop.common)
             implementation(libs.jna.platform) // keep the screen awake on Windows
@@ -34,3 +36,5 @@ kotlin {
         }
     }
 }
+
+compose.resources { packageOfResClass = "app.auriel.midas.ui.resources" }

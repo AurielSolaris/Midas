@@ -11,8 +11,8 @@ android {
         applicationId = "app.auriel.midas"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "alpha-0.1"
+        versionCode = 2
+        versionName = "alpha-0.2"
     }
     buildFeatures { compose = true }
 }

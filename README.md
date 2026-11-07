@@ -42,12 +42,17 @@ Build the debug APK with Android SDK platform 37 installed and `ANDROID_HOME` se
 or configure the SDK in Android Studio. Install the generated APK on a device or emulator with
 `adb install -r midasApp-android/build/outputs/apk/debug/midasApp-android-debug.apk`.
 
-The Android app uses Media3 and the shared player UI. It offers the system video picker, opening a
+The Android app uses Media3 and the shared player UI. It offers saved folders through the system
+folder picker, named playlists, recent videos, theme selection, and optional next-video autoplay.
+Folders and playlists use persistent document access; folder videos play in natural filename order.
+It also offers the system video picker, opening a
 video through Android's **Open with** flow, direct HTTP(S) links with optional headers, playback and
 seek controls, embedded audio and text track selection, external subtitle loading, and saved playback
 positions. The picker requests a persistent URI grant where the provider allows it. Android playback
-uses the codecs available through Media3 and the device; the FFmpeg extension, background audio, PiP,
-library browsing and full ASS styling are later stages. YouTube watch links are currently supported
+supports public MEGA file links entered under Open link, with streaming and seeking. MEGA folder links
+are not supported. MEGA streaming decrypts requested byte ranges but does not verify the whole-file MAC.
+It uses the codecs available through Media3 and the device; the FFmpeg extension, background audio, PiP,
+MediaStore library browsing and full ASS styling are later stages. YouTube watch links are currently supported
 only by the desktop resolver.
 
 The Android APK builds and has been exercised on an emulator; the full MVP acceptance checklist,

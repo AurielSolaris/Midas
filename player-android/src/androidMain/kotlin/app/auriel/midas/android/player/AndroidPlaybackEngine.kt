@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.asStateFlow
 class AndroidPlaybackEngine(context: Context) : PlaybackEngine {
     private val http = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
     val player: ExoPlayer = ExoPlayer.Builder(context.applicationContext)
-        .setMediaSourceFactory(DefaultMediaSourceFactory(DefaultDataSource.Factory(context.applicationContext, http)))
+        .setMediaSourceFactory(DefaultMediaSourceFactory(androidx.media3.datasource.DataSource.Factory {
+            MegaRoutingDataSource(DefaultDataSource.Factory(context.applicationContext, http).createDataSource())
+        }))
         .build()
     private val stateFlow = MutableStateFlow<PlaybackState>(PlaybackState.Idle)
     override val state = stateFlow.asStateFlow()

@@ -1,5 +1,11 @@
 package app.auriel.midas.ui.theme
 
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.font.FontFamily
+import org.jetbrains.compose.resources.Font
+import app.auriel.midas.ui.resources.Res
+import app.auriel.midas.ui.resources.open_sans
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -139,8 +145,17 @@ object Spacing {
 
 @Composable
 fun MidasTheme(theme: AppTheme, content: @Composable () -> Unit) {
+    val family = FontFamily(Font(Res.font.open_sans))
+    val default = Typography()
+    val typography = Typography(
+        displayLarge = default.displayLarge.copy(fontFamily = family), displayMedium = default.displayMedium.copy(fontFamily = family), displaySmall = default.displaySmall.copy(fontFamily = family),
+        headlineLarge = default.headlineLarge.copy(fontFamily = family), headlineMedium = default.headlineMedium.copy(fontFamily = family), headlineSmall = default.headlineSmall.copy(fontFamily = family),
+        titleLarge = default.titleLarge.copy(fontFamily = family), titleMedium = default.titleMedium.copy(fontFamily = family), titleSmall = default.titleSmall.copy(fontFamily = family),
+        bodyLarge = default.bodyLarge.copy(fontFamily = family), bodyMedium = default.bodyMedium.copy(fontFamily = family), bodySmall = default.bodySmall.copy(fontFamily = family),
+        labelLarge = default.labelLarge.copy(fontFamily = family), labelMedium = default.labelMedium.copy(fontFamily = family), labelSmall = default.labelSmall.copy(fontFamily = family),
+    )
     CompositionLocalProvider(LocalAppTheme provides theme) {
-        MaterialTheme(colorScheme = theme.colors, shapes = AppShapes, content = content)
+        MaterialTheme(colorScheme = theme.colors, shapes = AppShapes, typography = typography, content = content)
     }
 }
 
