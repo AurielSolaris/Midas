@@ -5,7 +5,7 @@ import java.io.File
 
 object AppInfo {
     const val NAME = "Midas"
-    const val VERSION = "0.1.0"
+    const val VERSION = "alpha-0.1"
 }
 
 enum class OperatingSystem {

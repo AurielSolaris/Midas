@@ -30,8 +30,8 @@ compose.desktop {
             appResourcesRootDir.set(project.layout.projectDirectory.dir("appResources"))
             targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Deb, TargetFormat.AppImage)
             packageName = "Midas"
-            // Windows Installer requires a positive major version; increment this for each upgrade.
-            packageVersion = "1.0.3"
+            // MSI versions must be numeric; the app and release version is alpha-0.1.
+            packageVersion = "1.0.4"
             description = "Midas video player"
             vendor = "Auriel"
             modules("java.instrument", "java.management", "java.net.http", "jdk.unsupported", "jdk.httpserver", "java.naming", "java.desktop")
